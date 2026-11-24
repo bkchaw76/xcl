@@ -1,0 +1,40 @@
+
+name: Build XCL Windows x64
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-2025
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Configure Rust
+        shell: pwsh
+        run: |
+          rustup toolchain install stable --profile minimal
+          rustup default stable
+          rustc --version
+
+      - name: Build Release
+        shell: pwsh
+        run: cargo build --release --workspace --locked
+
+      - name: Prepare executable
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force dist
+          Copy-Item target/release/xcl.exe dist/
+
+      - name: Upload executable
+        uses: actions/upload-artifact@v4
+        with:
+          name: XCL-Windows-x64
+          path: dist/
+          if-no-files-found: error
